@@ -5,9 +5,22 @@ const app = require('./app');
 
 const server = http.createServer(app);
 
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  'https://collaborative-note-app-ten.vercel.app/',
+  'https://collaborative-note-app-manas-projects-c3e25fed.vercel.app',
+  'http://localhost:3000',
+];
+
 const io = new Server(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: function(origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
   },
 });
