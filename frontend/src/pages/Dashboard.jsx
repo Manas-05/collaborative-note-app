@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { fetchNotes, createNote } from '../features/notes/notesSlice';
 import { searchNotes, clearSearch } from '../features/search/searchSlice';
 import { logoutUser } from '../features/auth/authSlice';
+import { FiPlus, FiSearch, FiLogOut, FiUser, FiFileText, FiClock } from 'react-icons/fi';
 
 export default function Dashboard() {
   const dispatch = useDispatch();
@@ -46,15 +47,21 @@ export default function Dashboard() {
     <div style={{ minHeight: '100vh', background: '#f5f5f5' }}>
       {/* Navbar */}
       <div style={{ background: '#fff', padding: '16px 24px', boxShadow: '0 1px 4px rgba(0,0,0,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h2 style={{ margin: 0, color: '#0066cc' }}>📝 CollabNotes</h2>
+        <h2 style={{ margin: 0, color: '#0066cc', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <FiFileText /> CollabNotes
+        </h2>
         <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-          <span style={{ fontSize: 14, color: '#666' }}>👤 {user?.name} ({user?.role})</span>
-          <Link to="/activity" style={{ fontSize: 14, color: '#0066cc', textDecoration: 'none' }}>Activity Log</Link>
+          <span style={{ fontSize: 14, color: '#666', display: 'flex', alignItems: 'center', gap: 4 }}>
+            <FiUser /> {user?.name} ({user?.role})
+          </span>
+          <Link to="/activity" style={{ fontSize: 14, color: '#0066cc', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
+            <FiClock /> Activity Log
+          </Link>
           <button
             onClick={handleLogout}
-            style={{ padding: '6px 14px', background: '#ff4444', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 14 }}
+            style={{ padding: '6px 14px', background: '#ff4444', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', gap: 4 }}
           >
-            Logout
+            <FiLogOut /> Logout
           </button>
         </div>
       </div>
@@ -62,17 +69,20 @@ export default function Dashboard() {
       {/* Main Content */}
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: 24 }}>
         <div style={{ display: 'flex', gap: 12, marginBottom: 24 }}>
-          <input
-            value={query}
-            onChange={handleSearch}
-            placeholder="🔍 Search notes by title or content..."
-            style={{ flex: 1, padding: 12, border: '1px solid #ddd', borderRadius: 4, fontSize: 14, background: '#fff' }}
-          />
+          <div style={{ flex: 1, position: 'relative' }}>
+            <FiSearch style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#888' }} />
+            <input
+              value={query}
+              onChange={handleSearch}
+              placeholder="Search notes by title or content..."
+              style={{ width: '100%', padding: '12px 12px 12px 36px', border: '1px solid #ddd', borderRadius: 4, fontSize: 14, background: '#fff', boxSizing: 'border-box' }}
+            />
+          </div>
           <button
             onClick={handleCreate}
-            style={{ padding: '12px 24px', background: '#0066cc', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 14, fontWeight: 'bold', whiteSpace: 'nowrap' }}
+            style={{ padding: '12px 24px', background: '#0066cc', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 14, fontWeight: 'bold', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6 }}
           >
-            + New Note
+            <FiPlus /> New Note
           </button>
         </div>
 
@@ -88,25 +98,26 @@ export default function Dashboard() {
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
           {displayNotes.map((note) => (
-            <Link
-              key={note.id}
-              to={`/notes/${note.id}`}
-              style={{ textDecoration: 'none', color: 'inherit' }}
-            >
+            <Link key={note.id} to={`/notes/${note.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
               <div
-                style={{ background: '#fff', border: '1px solid #e0e0e0', borderRadius: 8, padding: 20, cursor: 'pointer', transition: 'all 0.2s', height: '100%', boxSizing: 'border-box' }}
+                style={{ background: '#fff', border: '1px solid #e0e0e0', borderRadius: 8, padding: 20, cursor: 'pointer', transition: 'all 0.2s', boxSizing: 'border-box' }}
                 onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)'}
                 onMouseLeave={(e) => e.currentTarget.style.boxShadow = 'none'}
               >
                 <h3 style={{ margin: '0 0 8px', fontSize: 16, color: '#333', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <FiFileText style={{ marginRight: 6, color: '#0066cc' }} />
                   {note.title || 'Untitled'}
                 </h3>
                 <p style={{ color: '#888', fontSize: 13, margin: '0 0 16px', lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                   {note.content_preview || note.content?.substring(0, 120) || 'Empty note...'}
                 </p>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, color: '#999' }}>
-                  <span>✍️ {note.owner_name}</span>
-                  <span>{new Date(note.updated_at).toLocaleDateString()}</span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <FiUser size={11} /> {note.owner_name}
+                  </span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <FiClock size={11} /> {new Date(note.updated_at).toLocaleDateString()}
+                  </span>
                 </div>
                 {note.my_permission && note.my_permission !== 'owner' && (
                   <span style={{ display: 'inline-block', marginTop: 8, fontSize: 11, background: '#e8f4fd', color: '#0066cc', padding: '2px 8px', borderRadius: 12 }}>
@@ -120,14 +131,14 @@ export default function Dashboard() {
 
         {displayNotes.length === 0 && !loading && (
           <div style={{ textAlign: 'center', marginTop: 80, color: '#888' }}>
-            <div style={{ fontSize: 64, marginBottom: 16 }}>📄</div>
+            <FiFileText size={64} style={{ marginBottom: 16, opacity: 0.3 }} />
             <h3>{searchMode ? 'No notes match your search.' : 'No notes yet!'}</h3>
             {!searchMode && (
               <button
                 onClick={handleCreate}
-                style={{ marginTop: 12, padding: '10px 24px', background: '#0066cc', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 14 }}
+                style={{ marginTop: 12, padding: '10px 24px', background: '#0066cc', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 14, display: 'inline-flex', alignItems: 'center', gap: 6 }}
               >
-                Create your first note
+                <FiPlus /> Create your first note
               </button>
             )}
           </div>

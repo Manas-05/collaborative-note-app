@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchNote, updateNote, deleteNote, updateNoteRealtime, clearCurrentNote } from '../features/notes/notesSlice';
 import { getSocket } from '../services/socket';
 import api from '../services/api';
+import { FiArrowLeft, FiUsers, FiShare2, FiTrash2, FiLink, FiCopy, FiEye } from 'react-icons/fi';
 
 export default function NoteEditorPage() {
   const { id } = useParams();
@@ -18,8 +19,8 @@ export default function NoteEditorPage() {
   const [activeUsers, setActiveUsers] = useState([]);
   const [shareToken, setShareToken] = useState(null);
   const [showCollabModal, setShowCollabModal] = useState(false);
-
   const [saveMsg, setSaveMsg] = useState('');
+  const [copied, setCopied] = useState(false);
 
   const saveTimer = useRef(null);
   const isRemoteUpdate = useRef(false);
@@ -39,9 +40,7 @@ export default function NoteEditorPage() {
 
   useEffect(() => {
     if (!socket) return;
-
     socket.emit('join-note', { noteId: id });
-
     socket.on('note-updated', ({ title: t, content: c, updatedBy }) => {
       if (updatedBy?.id === user?.id) return;
       isRemoteUpdate.current = true;
@@ -50,9 +49,7 @@ export default function NoteEditorPage() {
       dispatch(updateNoteRealtime({ noteId: id, title: t, content: c }));
       setTimeout(() => { isRemoteUpdate.current = false; }, 100);
     });
-
     socket.on('active-users', (users) => setActiveUsers(users));
-
     return () => {
       socket.emit('leave-note', { noteId: id });
       socket.off('note-updated');
@@ -70,7 +67,7 @@ export default function NoteEditorPage() {
     setSaveMsg('Saving...');
     saveTimer.current = setTimeout(async () => {
       await dispatch(updateNote({ id, title: t, content: c }));
-      setSaveMsg('Saved ✓');
+      setSaveMsg('Saved!');
       setTimeout(() => setSaveMsg(''), 2000);
     }, 1500);
   };
@@ -101,6 +98,12 @@ export default function NoteEditorPage() {
     setShareToken(data.shareToken);
   };
 
+  const handleCopy = () => {
+    navigator.clipboard.writeText(`${window.location.origin}/public/${shareToken}`);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   const isOwner = currentNote?.owner_id === user?.id;
   const myCollab = collaborators.find((c) => c.id === user?.id);
   const canEdit = isOwner || myCollab?.permission === 'editor';
@@ -120,41 +123,41 @@ export default function NoteEditorPage() {
       <div style={{ background: '#fff', padding: '12px 24px', boxShadow: '0 1px 4px rgba(0,0,0,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 100 }}>
         <button
           onClick={() => navigate('/dashboard')}
-          style={{ background: 'none', border: '1px solid #ddd', padding: '6px 12px', borderRadius: 4, cursor: 'pointer', fontSize: 14 }}
+          style={{ background: 'none', border: '1px solid #ddd', padding: '6px 12px', borderRadius: 4, cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', gap: 6 }}
         >
-          ← Back
+          <FiArrowLeft /> Back
         </button>
 
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           {saveMsg && (
-            <span style={{ fontSize: 13, color: saveMsg.includes('✓') ? 'green' : '#888' }}>
+            <span style={{ fontSize: 13, color: saveMsg === 'Saved!' ? 'green' : '#888' }}>
               {saveMsg}
             </span>
           )}
           {activeUsers.length > 0 && (
-            <span style={{ fontSize: 12, background: '#e8f4fd', color: '#0066cc', padding: '4px 10px', borderRadius: 12 }}>
-              👥 {activeUsers.length} online
+            <span style={{ fontSize: 12, background: '#e8f4fd', color: '#0066cc', padding: '4px 10px', borderRadius: 12, display: 'flex', alignItems: 'center', gap: 4 }}>
+              <FiUsers size={12} /> {activeUsers.length} online
             </span>
           )}
           {isOwner && (
             <>
               <button
                 onClick={() => setShowCollabModal(true)}
-                style={{ padding: '6px 12px', background: '#f0f0f0', border: '1px solid #ddd', borderRadius: 4, cursor: 'pointer', fontSize: 13 }}
+                style={{ padding: '6px 12px', background: '#f0f0f0', border: '1px solid #ddd', borderRadius: 4, cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', gap: 4 }}
               >
-                👥 Collaborators
+                <FiUsers size={13} /> Collaborators
               </button>
               <button
                 onClick={handleGenerateShareLink}
-                style={{ padding: '6px 12px', background: '#f0f0f0', border: '1px solid #ddd', borderRadius: 4, cursor: 'pointer', fontSize: 13 }}
+                style={{ padding: '6px 12px', background: '#f0f0f0', border: '1px solid #ddd', borderRadius: 4, cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', gap: 4 }}
               >
-                🔗 Share
+                <FiShare2 size={13} /> Share
               </button>
               <button
                 onClick={handleDelete}
-                style={{ padding: '6px 12px', background: '#fff0f0', border: '1px solid #ffcccc', color: '#cc0000', borderRadius: 4, cursor: 'pointer', fontSize: 13 }}
+                style={{ padding: '6px 12px', background: '#fff0f0', border: '1px solid #ffcccc', color: '#cc0000', borderRadius: 4, cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', gap: 4 }}
               >
-                🗑️ Delete
+                <FiTrash2 size={13} /> Delete
               </button>
             </>
           )}
@@ -164,7 +167,8 @@ export default function NoteEditorPage() {
       {/* Share Link Banner */}
       {shareToken && (
         <div style={{ background: '#f0f9ff', border: '1px solid #b3d9ff', padding: '10px 24px', display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span style={{ fontSize: 13 }}>🔗 Public link:</span>
+          <FiLink size={14} style={{ color: '#0066cc' }} />
+          <span style={{ fontSize: 13 }}>Public link:</span>
           <a
             href={`${window.location.origin}/public/${shareToken}`}
             target="_blank"
@@ -174,10 +178,10 @@ export default function NoteEditorPage() {
             {`${window.location.origin}/public/${shareToken}`}
           </a>
           <button
-            onClick={() => navigator.clipboard.writeText(`${window.location.origin}/public/${shareToken}`)}
-            style={{ padding: '4px 10px', fontSize: 12, border: '1px solid #ddd', borderRadius: 4, cursor: 'pointer', background: '#fff' }}
+            onClick={handleCopy}
+            style={{ padding: '4px 10px', fontSize: 12, border: '1px solid #ddd', borderRadius: 4, cursor: 'pointer', background: '#fff', display: 'flex', alignItems: 'center', gap: 4 }}
           >
-            Copy
+            <FiCopy size={12} /> {copied ? 'Copied!' : 'Copy'}
           </button>
         </div>
       )}
@@ -199,11 +203,12 @@ export default function NoteEditorPage() {
           style={{ width: '100%', minHeight: '65vh', border: '1px solid #eee', borderRadius: 8, padding: 16, fontSize: 16, fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box', lineHeight: 1.7, outline: 'none', background: canEdit ? '#fff' : '#fafafa', color: '#333' }}
         />
         {!canEdit && (
-          <p style={{ color: '#888', fontSize: 13, marginTop: 8 }}>👁️ You have view-only access to this note.</p>
+          <p style={{ color: '#888', fontSize: 13, marginTop: 8, display: 'flex', alignItems: 'center', gap: 4 }}>
+            <FiEye size={13} /> You have view-only access to this note.
+          </p>
         )}
       </div>
 
-      {/* Collaborator Modal */}
       {showCollabModal && (
         <CollaboratorModal
           noteId={id}
@@ -249,7 +254,9 @@ function CollaboratorModal({ noteId, collaborators, onClose, onUpdate }) {
   return (
     <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
       <div style={{ background: '#fff', padding: 32, borderRadius: 8, width: '100%', maxWidth: 480, boxShadow: '0 8px 32px rgba(0,0,0,0.2)' }}>
-        <h3 style={{ margin: '0 0 20px' }}>👥 Manage Collaborators</h3>
+        <h3 style={{ margin: '0 0 20px', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <FiUsers /> Manage Collaborators
+        </h3>
 
         {message && (
           <div style={{ padding: 10, borderRadius: 4, marginBottom: 16, fontSize: 13, background: isError ? '#fff0f0' : '#f0fff0', color: isError ? 'red' : 'green', border: `1px solid ${isError ? '#ffcccc' : '#ccffcc'}` }}>
@@ -293,9 +300,9 @@ function CollaboratorModal({ noteId, collaborators, onClose, onUpdate }) {
                 </div>
                 <button
                   onClick={() => handleRemove(c.id)}
-                  style={{ background: 'none', border: 'none', color: '#cc0000', cursor: 'pointer', fontSize: 13 }}
+                  style={{ background: 'none', border: 'none', color: '#cc0000', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', gap: 4 }}
                 >
-                  Remove
+                  <FiTrash2 size={13} /> Remove
                 </button>
               </div>
             ))

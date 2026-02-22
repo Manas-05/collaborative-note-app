@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
+import { FiArrowLeft, FiEdit, FiTrash2, FiShare2, FiLink, FiPlus, FiFileText } from 'react-icons/fi';
 
 const actionConfig = {
-  create: { icon: '✨', label: 'created', color: '#00aa44' },
-  update: { icon: '✏️', label: 'updated', color: '#0066cc' },
-  delete: { icon: '🗑️', label: 'deleted', color: '#cc0000' },
-  share: { icon: '👥', label: 'shared', color: '#9900cc' },
-  generate_share_link: { icon: '🔗', label: 'generated share link for', color: '#cc6600' },
+  create: { icon: <FiPlus />, label: 'created', color: '#00aa44' },
+  update: { icon: <FiEdit />, label: 'updated', color: '#0066cc' },
+  delete: { icon: <FiTrash2 />, label: 'deleted', color: '#cc0000' },
+  share: { icon: <FiShare2 />, label: 'shared', color: '#9900cc' },
+  generate_share_link: { icon: <FiLink />, label: 'generated share link for', color: '#cc6600' },
 };
 
 export default function ActivityPage() {
@@ -24,10 +25,12 @@ export default function ActivityPage() {
   return (
     <div style={{ minHeight: '100vh', background: '#f5f5f5' }}>
       <div style={{ background: '#fff', padding: '16px 24px', boxShadow: '0 1px 4px rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', gap: 16 }}>
-        <Link to="/dashboard" style={{ color: '#0066cc', textDecoration: 'none', fontSize: 14 }}>
-          ← Back to Dashboard
+        <Link to="/dashboard" style={{ color: '#0066cc', textDecoration: 'none', fontSize: 14, display: 'flex', alignItems: 'center', gap: 4 }}>
+          <FiArrowLeft /> Back to Dashboard
         </Link>
-        <h2 style={{ margin: 0 }}>📋 Activity Log</h2>
+        <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <FiFileText /> Activity Log
+        </h2>
       </div>
 
       <div style={{ maxWidth: 800, margin: '0 auto', padding: 24 }}>
@@ -37,7 +40,7 @@ export default function ActivityPage() {
 
         {!loading && logs.length === 0 && (
           <div style={{ textAlign: 'center', marginTop: 60, color: '#888' }}>
-            <div style={{ fontSize: 48, marginBottom: 12 }}>📋</div>
+            <FiFileText size={48} style={{ marginBottom: 12, opacity: 0.3 }} />
             <p>No activity yet. Start creating notes!</p>
           </div>
         )}
@@ -45,13 +48,13 @@ export default function ActivityPage() {
         {!loading && logs.length > 0 && (
           <div style={{ background: '#fff', borderRadius: 8, boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
             {logs.map((log, idx) => {
-              const config = actionConfig[log.action] || { icon: '📋', label: log.action, color: '#333' };
+              const config = actionConfig[log.action] || { icon: <FiFileText />, label: log.action, color: '#333' };
               return (
                 <div
                   key={log.id}
                   style={{ display: 'flex', gap: 16, padding: '16px 20px', borderBottom: idx < logs.length - 1 ? '1px solid #f0f0f0' : 'none', alignItems: 'flex-start' }}
                 >
-                  <span style={{ fontSize: 24, minWidth: 32, textAlign: 'center' }}>
+                  <span style={{ fontSize: 20, minWidth: 32, textAlign: 'center', color: config.color, display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: 2 }}>
                     {config.icon}
                   </span>
                   <div style={{ flex: 1 }}>
@@ -59,10 +62,7 @@ export default function ActivityPage() {
                       <strong>{log.user_name || 'Someone'}</strong>{' '}
                       <span style={{ color: config.color }}>{config.label}</span>{' '}
                       {log.note_id ? (
-                        <Link
-                          to={`/notes/${log.note_id}`}
-                          style={{ color: '#0066cc', textDecoration: 'none', fontWeight: 'bold' }}
-                        >
+                        <Link to={`/notes/${log.note_id}`} style={{ color: '#0066cc', textDecoration: 'none', fontWeight: 'bold' }}>
                           "{log.note_title || 'a note'}"
                         </Link>
                       ) : (
